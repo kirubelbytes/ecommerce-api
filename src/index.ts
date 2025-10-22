@@ -1,9 +1,34 @@
 import express from "express";
-import type { Express, Request ,Response } from "express";
+import helmet from "helmet";
+import cors from "cors";
+import morgan from "morgan";
+import rateLimit from "express-rate-limit";
+
 import { PORT } from "./config/secrets.js";
-const app:Express = express();
+import rootRouter from "./routes/index.js";
+
+const app = express();
+
+//Security headers
+app.use(helmet());
+
+//Cross-Origin Resource Sharing  
+app.use(cors());
+
+// Logger
+app.use(morgan("dev"));
+
 
 app.use(express.json());
-app.get("/", (req:Request, res:Response) => res.send("API running..."));
 
-app.listen(3000, () => console.log(`Server on http://localhost:${PORT}`));
+//Rate limiter - place here
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100 
+});
+app.use(limiter);
+
+// Routes
+app.use("/api/v1", rootRouter);
+
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
