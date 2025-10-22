@@ -1,11 +1,14 @@
 import express from "express";
-import helmet from "helmet";
+// import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 
 import { PORT } from "./config/secrets.js";
 import rootRouter from "./routes/index.js";
+import { PrismaClient } from "@prisma/client";
+import helmet from "helmet";
+
 
 const app = express();
 
@@ -31,4 +34,10 @@ app.use(limiter);
 // Routes
 app.use("/api/v1", rootRouter);
 
+
+export const prismaClient = new PrismaClient({
+    log : ["query"]
+});
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
+ 
