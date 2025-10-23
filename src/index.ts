@@ -8,6 +8,7 @@ import { PORT } from "./config/secrets.js";
 import rootRouter from "./routes/index.js";
 import { PrismaClient } from "@prisma/client";
 import helmet from "helmet";
+import { singUpSchema } from "./schemas/user.js";
 
 
 const app = express();

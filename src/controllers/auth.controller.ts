@@ -3,14 +3,20 @@ import { prismaClient } from "../index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/secrets.js";
+import { singUpSchema } from "../schemas/user.js";
 
 export const signUp = async(req : Request, res: Response) => {
-   const { name , email , password } = req.body;
+   const validation = singUpSchema.safeParse(req.body);
+   if(!validation.success) {
+    return res.status(400).json({
+        success : false,
+        message : "Validation failed",
+        error : validation.error
+    })
+   };
+    const { name , email , password } = validation.data;
+
    try {
-        // validate input 
-        if(!email || !password || !name) {
-            return res.status(400).json({message : "All fields are required"})
-        }
 
         // Check if user exist
         let userExist = await prismaClient.user.findFirst({where : {email}});
