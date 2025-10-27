@@ -7,7 +7,7 @@ import { logInSchema, singUpSchema } from "../schemas/user.js";
 
 export const signUp = async(req : Request, res: Response) => {
    const validation = singUpSchema.safeParse(req.body);
-   if(!validation.success) {
+   if(!validation.success) { 
     return res.status(400).json({
         success : false,
         message : "Validation failed",
@@ -17,13 +17,12 @@ export const signUp = async(req : Request, res: Response) => {
     const { name , email , password } = validation.data;
 
    try {
-
         // Check if user exist
         let userExist = await prismaClient.user.findFirst({where : {email}});
         if(userExist) {
             return res.status(400).json({ message : "User already exist"})
         };
-
+        
         // hash password securely
         const hashedPassword = await bcrypt.hash(password, 10);
 

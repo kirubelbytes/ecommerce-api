@@ -1,4 +1,4 @@
-import z, { email } from "zod";
+import z from "zod";
 
 export const singUpSchema = z.object({
     name: z.string(),
@@ -9,4 +9,4 @@ export const singUpSchema = z.object({
 export const logInSchema = z.object({
     email : z.string(),
     password : z.string().min(4, "Password must be atleast 8 character long")
-})
+});
