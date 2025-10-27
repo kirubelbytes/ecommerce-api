@@ -6,6 +6,7 @@ import { JWT_SECRET } from "../config/secrets.js";
 import { logInSchema, singUpSchema } from "../schemas/user.js";
 import { BadRequestException } from "../exceptions/BadRequest.js";
 import { ErrorCode } from "../exceptions/BaseError.js";
+import { UnauthorizedException } from "../exceptions/UnauthorizedException.js";
 
 export const signUp = async(req : Request, res: Response, next : NextFunction) => {
    const validation = singUpSchema.safeParse(req.body);
@@ -21,7 +22,7 @@ export const signUp = async(req : Request, res: Response, next : NextFunction) =
     // Check if user exist
     let userExist = await prismaClient.user.findFirst({where : {email}});
     if(userExist) {
-        next(new BadRequestException("User Not Found", ErrorCode.USER_ALREADY_EXISTS));
+       return next(new BadRequestException("User Not Found", ErrorCode.USER_ALREADY_EXISTS));
     }
 
     // hash password securely
@@ -43,35 +44,34 @@ export const signUp = async(req : Request, res: Response, next : NextFunction) =
     return res.status(201).json(safeUser);
 };
 
-export const login = async(req:Request , res: Response) => {
-    try {
-        const { email, password } = logInSchema.parse(req.body);
-        const user = await prismaClient.user.findUnique({where : {email}});
-        if(!user) {
-            return res.status(400).json({message : "Invalid Email or Password"})
-        };
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if(!isPasswordValid) {
-            return res.status(400).json({message : "Invalid Email or Password"})
-        };
-        const token = jwt.sign(
-            {id : user.id , email : user.email},
-            JWT_SECRET,
-            {expiresIn : "1d"}
-        );
-        const { password : _, ...safeUser } = user;
-        return res.status(200).json({
-            message : "Login successful",
-            user : safeUser,
-            token
-        });
-    } catch (error : any) {
-        if(error.name === "ZodError"){
-            return res.status(400).json({
-                message: "Inavalid input",
-            })
-        }
-        console.error("Login error", error);
-        return res.status(500).json({ message : "Internal server error"})
+export const login = async(req:Request , res: Response, next : NextFunction) => {
+    const parsed = logInSchema.safeParse(req.body);
+    if (!parsed.success) {
+    return res.status(400).json({
+        success: false,
+        message: "Invalid input data",
+    });
     }
+
+    const { email, password } = parsed.data;
+
+    const user = await prismaClient.user.findUnique({where : {email}});
+    if(!user) {
+        return next(new UnauthorizedException("Invalid Email or Password", ErrorCode.USER_NOT_FOUND ))
+    };
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if(!isPasswordValid) {
+       return next(new UnauthorizedException("Invalid Email or Password", ErrorCode.USER_NOT_FOUND))
+    };
+    const token = jwt.sign(
+        {id : user.id , email : user.email},
+        JWT_SECRET,
+        {expiresIn : "1d"}
+    );
+    const { password : _, ...safeUser } = user;
+    return res.status(200).json({
+        message : "Login successful",
+        user : safeUser,
+        token
+    });
 }
