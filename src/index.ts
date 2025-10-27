@@ -8,7 +8,7 @@ import { PORT } from "./config/secrets.js";
 import rootRouter from "./routes/index.js";
 import { PrismaClient } from "@prisma/client";
 import helmet from "helmet";
-import { singUpSchema } from "./schemas/user.js";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 
 const app = express();
@@ -39,6 +39,9 @@ app.use("/api/v1", rootRouter);
 export const prismaClient = new PrismaClient({
     log : ["query"]
 });
+
+app.use(errorMiddleware)
+
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 
  

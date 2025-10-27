@@ -1,11 +1,13 @@
-import type { Request, Response } from "express"
+import type { NextFunction, Request, Response } from "express"
 import { prismaClient } from "../index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/secrets.js";
 import { logInSchema, singUpSchema } from "../schemas/user.js";
+import { BadRequestException } from "../exceptions/BadRequest.js";
+import { ErrorCode } from "../exceptions/BaseError.js";
 
-export const signUp = async(req : Request, res: Response) => {
+export const signUp = async(req : Request, res: Response, next : NextFunction) => {
    const validation = singUpSchema.safeParse(req.body);
    if(!validation.success) { 
     return res.status(400).json({
@@ -16,34 +18,29 @@ export const signUp = async(req : Request, res: Response) => {
    };
     const { name , email , password } = validation.data;
 
-   try {
-        // Check if user exist
-        let userExist = await prismaClient.user.findFirst({where : {email}});
-        if(userExist) {
-            return res.status(400).json({ message : "User already exist"})
-        };
-        
-        // hash password securely
-        const hashedPassword = await bcrypt.hash(password, 10);
+    // Check if user exist
+    let userExist = await prismaClient.user.findFirst({where : {email}});
+    if(userExist) {
+        next(new BadRequestException("User Not Found", ErrorCode.USER_ALREADY_EXISTS));
+    }
 
-        // create a user using the hashed pasword 
-        const user = await prismaClient.user.create({
-                data : {
-                    name,
-                    email,
-                    password : hashedPassword
-                }
-        });
-        
-        // exclude the password from response
-        const { password : _, ...safeUser } = user;
+    // hash password securely
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        //return created user
-        return res.status(201).json(safeUser);
-   } catch (error : any) {
-        console.error("Sign up error:", error);
-        return res.status(500).json({ message : "Internal server error" })
-   };
+    // create a user using the hashed pasword 
+    const user = await prismaClient.user.create({
+            data : {
+                name,
+                email,
+                password : hashedPassword
+            }
+    });
+    
+    // exclude the password from response
+    const { password : _, ...safeUser } = user;
+
+    //return created user
+    return res.status(201).json(safeUser);
 };
 
 export const login = async(req:Request , res: Response) => {
