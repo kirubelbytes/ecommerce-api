@@ -32,19 +32,18 @@ export const signUp = async(req : Request, res: Response, next : NextFunction) =
 };
 
 export const login = async(req:Request , res: Response, next : NextFunction) => {
-    try {
         const parsed = logInSchema.safeParse(req.body);
         if (!parsed.success) {
-            return next(new UnprocessableEntity(parsed.error))
+            return new UnprocessableEntity(parsed.error)
         }
         const { email, password } = parsed.data;
         const user = await prismaClient.user.findUnique({where : {email}});
         if(!user) {
-            return next(new UnauthorizedException("Invalid Email or Password", ErrorCode.USER_NOT_FOUND ))
+            return next(new UnauthorizedException("Invalid Email or Password", ErrorCode.USER_NOT_FOUND));
         };
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if(!isPasswordValid) {
-        return next(new UnauthorizedException("Invalid Email or Password", ErrorCode.INCORECT_PASSWORD))
+        return next(new UnauthorizedException("Invalid Email or Password", ErrorCode.INCORECT_PASSWORD));
         };
         const token = jwt.sign(
             {id : user.id , email : user.email},
@@ -57,7 +56,4 @@ export const login = async(req:Request , res: Response, next : NextFunction) => 
             user : safeUser,
             token
         });
-    } catch (error) {
-        next(error)
-    }
 }
