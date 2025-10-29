@@ -6,7 +6,7 @@ import { JWT_SECRET } from "../config/secrets.js";
 import { logInSchema, singUpSchema } from "../schemas/user.js";
 import { BadRequestException } from "../exceptions/BadRequest.js";
 import { ErrorCode } from "../exceptions/BaseError.js";
-import { UnauthorizedException } from "../exceptions/UnauthorizedException.js";
+import { NotFoundException } from "../exceptions/NotFoundException.js";
 import { UnprocessableEntity } from "../exceptions/ValidationException.js";
 
 export const signUp = async(req : Request, res: Response, next : NextFunction) => {
@@ -39,11 +39,11 @@ export const login = async(req:Request , res: Response, next : NextFunction) => 
         const { email, password } = parsed.data;
         const user = await prismaClient.user.findUnique({where : {email}});
         if(!user) {
-            return next(new UnauthorizedException("Invalid Email or Password", ErrorCode.USER_NOT_FOUND));
+            return next(new NotFoundException("Invalid Email or Password", ErrorCode.USER_NOT_FOUND));
         };
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if(!isPasswordValid) {
-        return next(new UnauthorizedException("Invalid Email or Password", ErrorCode.INCORECT_PASSWORD));
+        return next(new NotFoundException("Invalid Email or Password", ErrorCode.INCORECT_PASSWORD));
         };
         const token = jwt.sign(
             {id : user.id , email : user.email},
