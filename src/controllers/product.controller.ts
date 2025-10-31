@@ -3,34 +3,52 @@ import { prismaClient } from "../index.js";
 import { createProductSchema } from "../schemas/user.js";
 import { NotFoundException } from "../exceptions/NotFoundException.js";
 import { ErrorCode } from "../exceptions/BaseError.js";
+import { success } from "zod";
 
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
     const validatedData = createProductSchema.parse(req.body)
+      let tagsString = "";
+    if (Array.isArray(validatedData.tags)) {
+      tagsString = validatedData.tags.join(",");
+    } else if (typeof validatedData.tags === "string") {
+      tagsString = validatedData.tags;
+    }
     const product = await prismaClient.product.create({
         data: {
             ...validatedData,
             description : validatedData.description || "",
-            tags: validatedData.tags.join(","),
+            tags: tagsString,
         },
     });
-    res.json(product);
+    res.status(200).json({
+        success: true,
+        message : "Product updated successfully",
+        data : product
+    });
 };
 
 
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const productData = req.body;
+    const updateProductSchema = createProductSchema.partial();
+
+    const productData = updateProductSchema.parse(req.body) as any;
 
     if (Array.isArray(productData.tags)) {
       productData.tags = productData.tags.join(",");
     }
 
+    const id = Number(req.params.id)
     const updatedProduct = await prismaClient.product.update({
-      where: { id: Number(req.params.id) },
+      where: { id },
       data: productData,
     });
 
-    res.json(updatedProduct);
+    res.status(200).json({
+        success: true,
+        message : "Product updated successfully",
+        data : updatedProduct
+    });
   } catch (err: any) {
     if (err.code === "P2025") {
       return next(new NotFoundException("Product not found", ErrorCode.PRODUCT_NOT_FOUND));
@@ -39,8 +57,21 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-export const deleteProduct = async(req: Request, res: Response) => {
-
+export const deleteProduct = async(req: Request, res: Response , next: NextFunction) => {
+    try {
+        const id = Number(req.params.id);
+        if(Number.isNaN(id)) {
+            next(new NotFoundException("Invalid product id", ErrorCode.PRODUCT_NOT_FOUND))
+        }
+        const deletedProduct = await prismaClient.product.delete({where: {id}});
+        res.status(200).json({
+            success: true,
+            message : "Product deleted Successfully",
+            data : deletedProduct
+        })
+    } catch (err) {
+        next(new NotFoundException("Product not found",ErrorCode.PRODUCT_NOT_FOUND))
+    }
 }
 
 export const listProducts = async(req: Request, res: Response) => {
