@@ -25,7 +25,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
         message : "Product updated successfully",
         data : product
     });
-};
+}
 
 
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
@@ -55,7 +55,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
     }
     next(err);
   }
-};
+}
 
 export const deleteProduct = async(req: Request, res: Response , next: NextFunction) => {
     try {
@@ -75,7 +75,25 @@ export const deleteProduct = async(req: Request, res: Response , next: NextFunct
 }
 
 export const listProducts = async(req: Request, res: Response) => {
+    const totalCount = await prismaClient.product.count();
+    const skip = Number(req.query.skip) || 0;
+    const take = Number(req.query.take) || 5;
+    const products = await prismaClient.product.findMany({
+        skip,
+        take,
+        orderBy : {createdAt : 'asc'}
+    });
+    const nextSkip = skip + take < totalCount ? skip + take : null;
+    const prevSkip = skip - take >= 0 ? skip - take : null;
 
+    res.status(200).json({
+        totalCount,
+        skip,
+        take,
+        nextSkip,
+        prevSkip,
+        data : products
+    });
 }
 
 export const getProductById = async(req: Request, res: Response) => {
