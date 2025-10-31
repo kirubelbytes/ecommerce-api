@@ -15,5 +15,8 @@ export const createProductSchema = z.object({
     name: string().min(1, "Name is required").max(20),
     description: string().min(1, "Description is required"),
     price : number().positive("Price must be Positive"),
-    tags : array(z.string()).nonempty("At least one tag is required")
+    tags : z.union([
+        z.array(z.string()).nonempty("Atleast one tag is required"),
+        z.string().min(1, "Tags string can't be empty")
+    ])
 });
