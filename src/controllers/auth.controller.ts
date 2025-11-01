@@ -34,7 +34,7 @@ export const signUp = async(req : Request, res: Response, next : NextFunction) =
 export const login = async(req:Request , res: Response, next : NextFunction) => {
         const parsed = logInSchema.safeParse(req.body);
         if (!parsed.success) {
-            return new UnprocessableEntity(parsed.error)
+            return next(new UnprocessableEntity(parsed.error))
         }
         const { email, password } = parsed.data;
         const user = await prismaClient.user.findUnique({where : {email}});
