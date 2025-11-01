@@ -1,6 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import { prismaClient } from "../index.js";
-import { createProductSchema } from "../schemas/user.js";
+import { createProductSchema, paginationSchema } from "../schemas/user.js";
 import { NotFoundException } from "../exceptions/NotFoundException.js";
 import { ErrorCode } from "../exceptions/BaseError.js";
 import { success } from "zod";
@@ -76,8 +76,7 @@ export const deleteProduct = async(req: Request, res: Response , next: NextFunct
 
 export const listProducts = async(req: Request, res: Response) => {
     const totalCount = await prismaClient.product.count();
-    const skip = Number(req.query.skip) || 0;
-    const take = Number(req.query.take) || 5;
+    const { skip, take } = paginationSchema.parse(req.query);
     const products = await prismaClient.product.findMany({
         skip,
         take,

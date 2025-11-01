@@ -20,3 +20,14 @@ export const createProductSchema = z.object({
         z.string().min(1, "Tags string can't be empty")
     ])
 });
+
+export const paginationSchema = z.object({
+  skip: z.string().optional().transform((val) => {
+      const num = Number(val);
+      return Number.isFinite(num) && num >= 0 ? num : 0;
+    }),
+  take: z.string().optional().transform((val) => {
+      const num = Number(val);
+      return Number.isFinite(num) && num > 0 && num <= 50 ? num : 20;
+    }),
+});
