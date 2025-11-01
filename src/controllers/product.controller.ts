@@ -3,7 +3,6 @@ import { prismaClient } from "../index.js";
 import { createProductSchema, paginationSchema } from "../schemas/user.js";
 import { NotFoundException } from "../exceptions/NotFoundException.js";
 import { ErrorCode } from "../exceptions/BaseError.js";
-import { success } from "zod";
 
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
     const validatedData = createProductSchema.parse(req.body)
@@ -95,6 +94,20 @@ export const listProducts = async(req: Request, res: Response) => {
     });
 }
 
-export const getProductById = async(req: Request, res: Response) => {
-
+export const getProductById = async(req: Request, res: Response, next : NextFunction ) => {
+ try {
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+        return next(new NotFoundException("Invalid product ID", ErrorCode.PRODUCT_NOT_FOUND));
+    }
+    const product = await prismaClient.product.findUnique({
+        where : { id }
+    });
+    res.status(200).json({
+        success : true,
+        data : product
+    })
+ } catch (err) {
+    next( new NotFoundException("Product not found", ErrorCode.PRODUCT_NOT_FOUND))
+ }
 }
