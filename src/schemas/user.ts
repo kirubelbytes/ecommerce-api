@@ -31,3 +31,12 @@ export const paginationSchema = z.object({
       return Number.isFinite(num) && num > 0 && num <= 50 ? num : 20;
     }),
 });
+
+export const addressSchema = z.object({
+    lineOne : z.string(),
+    lineTwo : z.string().nullable(),
+    pincode : z.string().length(6),
+    country : z.string(),
+    city : z.string(),
+    userId : z.number()
+})
