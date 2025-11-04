@@ -61,7 +61,7 @@ export const listAddress = async(req: Request, res: Response, next: NextFunction
         });
         res.status(200).json(address)
      } catch (error) {
-        console.error(error)
+        next(error)
      }
 }
 
