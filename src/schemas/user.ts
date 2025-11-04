@@ -38,5 +38,10 @@ export const addressSchema = z.object({
     pincode : z.string().length(6),
     country : z.string(),
     city : z.string(),
-    // userId : z.number()
+});
+
+export const updateUserSchema = z.object({
+  name: z.string().nullable().optional(),
+  defaultShippingAddress: z.number().nullable().optional(),
+  defaultBillingAddress: z.number().nullable().optional(),
 });
