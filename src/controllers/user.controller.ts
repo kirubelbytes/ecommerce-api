@@ -8,9 +8,11 @@ import { prismaClient } from '../index.js'
 export const addAddress = async(req: Request, res: Response, next: NextFunction) => {
     try {
         const validatedData = addressSchema.parse(req.body);
+        const userId = Number(req.user?.id);
         const user = await prismaClient.user.findFirstOrThrow({
-            where : {id : validatedData.userId}
+            where : {id : userId}
         });
+
         const address = await prismaClient.address.create({
             data : {
                 lineOne: validatedData.lineOne,
@@ -18,7 +20,7 @@ export const addAddress = async(req: Request, res: Response, next: NextFunction)
                 city: validatedData.city,
                 country: validatedData.country,
                 pincode: validatedData.pincode,
-                userId: validatedData.userId,
+                userId
             }
         })
         res.status(200).json(address)
@@ -27,7 +29,7 @@ export const addAddress = async(req: Request, res: Response, next: NextFunction)
     }
 }
 
-export const deleteAddress = (req: Request , res: Response) => {
+export const deleteAddress = async(req: Request , res: Response, next: NextFunction) => {
 
 }
 
