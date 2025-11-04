@@ -30,7 +30,25 @@ export const addAddress = async(req: Request, res: Response, next: NextFunction)
 }
 
 export const deleteAddress = async(req: Request , res: Response, next: NextFunction) => {
-
+    try {
+        const id = Number(req.params.id)
+        const userId = req.user?.id;
+        const address = await prismaClient.address.findUnique({
+            where : {id}
+        });
+        if(!address || !(address.userId === userId)) {
+            next( new NotFoundException("Address not found or Unauthorised", ErrorCode.ADDRESS_NOT_FOUND))
+        };
+        await prismaClient.address.delete({
+            where : {id}
+        });
+        res.status(200).json({
+            success : true,
+            message : "Address deleted Successfully"
+        });
+    } catch (error) {
+        next(new NotFoundException("Address not found", ErrorCode.ADDRESS_NOT_FOUND))
+    }
 }
 
 export const listAddress = (req: Request, res: Response) => {
