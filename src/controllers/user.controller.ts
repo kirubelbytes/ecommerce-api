@@ -51,7 +51,17 @@ export const deleteAddress = async(req: Request , res: Response, next: NextFunct
     }
 }
 
-export const listAddress = (req: Request, res: Response) => {
-
+export const listAddress = async(req: Request, res: Response, next: NextFunction) => {
+     try {
+        if(!req.user?.id) {
+            return next( new NotFoundException("User not found", ErrorCode.UNAUTHORIZED))
+        }
+        const address = await prismaClient.address.findMany({
+            where : {userId : req.user?.id}
+        });
+        res.status(200).json(address)
+     } catch (error) {
+        console.error(error)
+     }
 }
 
