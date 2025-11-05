@@ -92,5 +92,19 @@ export const changeQuantity = async(req: Request, res: Response, next: NextFunct
 }
 
 export const getCart = async(req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      return next(new NotFoundException("User not found", ErrorCode.UNAUTHORIZED));
+    }
 
+    const cart = await prismaClient.cartItem.findMany({
+      where: { userId },
+      include: { product: true}
+    });
+
+    return res.status(200).json({
+      message: cart.length ? "Cart fetched successfully" : "Your cart is empty",
+      data: cart
+    });
+  
 }
