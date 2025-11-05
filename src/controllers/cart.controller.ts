@@ -33,7 +33,23 @@ export const addItemToCart = async(req : Request , res: Response , next : NextFu
 }
 
 export const deleteItemFromCart = async(req: Request, res: Response, next: NextFunction) => {
-
+    const id = Number(req.params.id);
+    if(isNaN(id) || id <= 0) {
+       return next(new NotFoundException("Invalid ID", ErrorCode.PRODUCT_NOT_FOUND))
+    } 
+    const cartItem = await prismaClient.cartItem.findFirst({
+        where : {id}
+    });
+    if(!cartItem) {
+       return next(new NotFoundException("Product not found", ErrorCode.PRODUCT_NOT_FOUND))
+    }
+    if(!req.user?.id || req.user?.id !== cartItem?.userId) {
+        next(new NotFoundException("User Not found", ErrorCode.UNAUTHORIZED))
+    }
+    await prismaClient.cartItem.delete({
+        where : {id}
+    })
+    res.status(200).json({message : "Item deleted from cart successfully"});
 }
 
 export const changeQuantity = async(req: Request, res: Response, next: NextFunction) => {
