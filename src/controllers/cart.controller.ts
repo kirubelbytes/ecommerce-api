@@ -69,7 +69,26 @@ export const deleteItemFromCart = async(req: Request, res: Response, next: NextF
 }
 
 export const changeQuantity = async(req: Request, res: Response, next: NextFunction) => {
+    const validatedData =  req.body ;
+    const id = Number(req.params.id);
+    const userId =  req.user?.id
 
+    if(isNaN(id) || id <= 0) {
+       return next(new NotFoundException("Invalid Id", ErrorCode.UNAUTHORIZED))
+    };
+    const cartItem = await prismaClient.cartItem.findFirstOrThrow({
+        where : {id}
+    });
+    if(!cartItem || cartItem.userId !== req.user?.id) {
+       return next(new NotFoundException("Item not found", ErrorCode.UNAUTHORIZED))
+    }
+    const updatedCartItem = await prismaClient.cartItem.update({
+        where : { id},
+        data : {
+            quantity : validatedData.quantity
+        }
+    }) 
+    res.status(200).json(updatedCartItem)
 }
 
 export const getCart = async(req: Request, res: Response, next: NextFunction) => {
