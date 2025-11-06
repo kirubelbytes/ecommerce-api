@@ -26,6 +26,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
     });
 }
 
+
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const updateProductSchema = createProductSchema.partial();
@@ -105,7 +106,7 @@ export const getProductById = async(req: Request, res: Response, next : NextFunc
     res.status(200).json({
         success : true,
         data : product
-    })
+    });
  } catch (err) {
     next( new NotFoundException("Product not found", ErrorCode.PRODUCT_NOT_FOUND))
  }

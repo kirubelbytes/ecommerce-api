@@ -68,7 +68,7 @@ export const listOrder = async( req: Request, res: Response , next : NextFunctio
     const orders = await prismaClient.order.findMany({
         where : {userId}
     })
-    res.json(orders)
+    res.status(200).json(orders)
 }
 
 export const cancelOrder = async(req: Request, res:Response, next: NextFunction) => {
@@ -76,5 +76,20 @@ export const cancelOrder = async(req: Request, res:Response, next: NextFunction)
 }
 
 export const getOrderById = async(req: Request, res:Response, next: NextFunction) => {
-
+    try {
+        const id = Number(req.params.id);
+        if(isNaN(id) || id <= 0 ) {
+            return next(new NotFoundException("Invalid Id", ErrorCode.ORDER_NOT_FOUND))
+        }
+        const order = await prismaClient.order.findFirstOrThrow({
+            where : { id },
+            include : {
+                products: true,
+                events : true
+            }
+        })
+        res.status(200).json(order);
+    } catch (error) {
+        return next(new NotFoundException("Invalid Id", ErrorCode.ORDER_NOT_FOUND))
+    }
 }
