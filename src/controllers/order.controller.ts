@@ -70,10 +70,49 @@ export const listOrder = async( req: Request, res: Response , next : NextFunctio
     })
     res.status(200).json(orders)
 }
+export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.id;
+    const orderId = Number(req.params.id);
 
-export const cancelOrder = async(req: Request, res:Response, next: NextFunction) => {
+    if (!userId) {
+    return next(new NotFoundException("User not found", ErrorCode.UNAUTHORIZED));
+    }
+    if (isNaN(orderId) || orderId <= 0) {
+    return next(new NotFoundException("Invalid Order ID", ErrorCode.ORDER_NOT_FOUND));
+    }
 
-}
+    try {
+    const result = await prismaClient.$transaction(async (tx) => {
+        const order = await tx.order.findFirst({
+        where: { id: orderId, userId },
+        });
+
+        if (!order) {
+        throw new NotFoundException("Order not found or not owned by user", ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        const updatedOrder = await tx.order.update({
+        where: { id: order.id },
+        data: { status: "CANCELLED" },
+        });
+
+        await tx.orderEvent.updateMany({
+        where: { orderId: order.id },
+        data: { status: "CANCELLED" },
+        });
+
+        return updatedOrder;
+    });
+
+    res.status(200).json({
+        message: "Order cancelled successfully",
+        data: result,
+    });
+    } catch (error) {
+    next(error);
+    }
+};
+
 
 export const getOrderById = async(req: Request, res:Response, next: NextFunction) => {
     try {
@@ -90,6 +129,6 @@ export const getOrderById = async(req: Request, res:Response, next: NextFunction
         })
         res.status(200).json(order);
     } catch (error) {
-        return next(new NotFoundException("Invalid Id", ErrorCode.ORDER_NOT_FOUND))
+        return next(new NotFoundException("Order not found", ErrorCode.ORDER_NOT_FOUND))
     }
 }
