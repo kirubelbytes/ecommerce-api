@@ -1,5 +1,4 @@
 import express from "express";
-// import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
@@ -38,6 +37,23 @@ app.use("/api/v1", rootRouter);
 
 export const prismaClient = new PrismaClient({
     log : ["query"]
+}).$extends({
+    result : {
+        address : {
+            formattedAddress : {
+                needs : {
+                    lineOne: true,
+                    lineTwo : true,
+                    city : true,
+                    country : true,
+                    pincode : true
+                },
+                compute(addrs) {
+                    return `${addrs.lineOne}, ${addrs.lineTwo}, ${addrs.city}, ${addrs.country}-${addrs.pincode}`
+                },
+            }
+        }
+    }
 });
 
 app.use(errorMiddleware)
