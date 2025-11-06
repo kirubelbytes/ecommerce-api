@@ -60,8 +60,15 @@ export const createOrder = async(req : Request, res: Response, next: NewableFunc
     })
 }
 
-export const listOrder = async( req: Request, res: Request , next : NextFunction) => {
-
+export const listOrder = async( req: Request, res: Response , next : NextFunction) => {
+    const userId = req.user?.id;
+    if(!userId) {
+        return next(new NotFoundException("User not found", ErrorCode.UNAUTHORIZED))
+    }
+    const orders = await prismaClient.order.findMany({
+        where : {userId}
+    })
+    res.json(orders)
 }
 
 export const cancelOrder = async(req: Request, res:Response, next: NextFunction) => {
