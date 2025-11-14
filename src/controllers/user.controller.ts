@@ -153,6 +153,39 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
   });
 };
 
-export const changeUserRole = async(req : Request, res: Response, next: NextFunction) => {
-  
-}
+export const changeUserRole = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = Number(req.params.id);
+  const { role } = req.body;
+
+  const allowedRoles = ["ADMIN", "USER"];
+
+  if (isNaN(userId) || userId <= 0) {
+    return next(new BadRequestException("Invalid User ID", ErrorCode.UNPROCESSABLE_ENTITY));
+  }
+
+  if (!role || !allowedRoles.includes(role)) {
+    return next(new BadRequestException("Invalid role", ErrorCode.UNPROCESSABLE_ENTITY));
+  }
+
+  const user = await prismaClient.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    return next(new NotFoundException("User not found", ErrorCode.USER_NOT_FOUND));
+  }
+
+  if (req.user?.id === userId) {
+    return next(new BadRequestException("Cannot change your own role", ErrorCode.INTERNAL_EXCEPTION));
+  }
+
+  const updatedUser = await prismaClient.user.update({
+    where: { id: userId },
+    data: { role },
+  });
+
+  return res.status(200).json({
+    message: `User role updated to ${role} successfully`,
+    data: updatedUser,
+  });
+};
