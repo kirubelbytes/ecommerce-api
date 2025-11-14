@@ -3,7 +3,6 @@ import { prismaClient } from "../index.js"
 import { NotFoundException } from "../exceptions/NotFoundException.js"
 import { ErrorCode } from "../exceptions/BaseError.js"
 
-
 export const createOrder = async(req : Request, res: Response, next: NewableFunction) => {
     const order =  await prismaClient.$transaction(async(tx) => {
         const userId = req.user?.id
@@ -70,6 +69,7 @@ export const listOrder = async( req: Request, res: Response , next : NextFunctio
     })
     res.status(200).json(orders)
 }
+
 export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id;
     const orderId = Number(req.params.id);
@@ -112,7 +112,6 @@ export const cancelOrder = async (req: Request, res: Response, next: NextFunctio
     next(error);
     }
 };
-
 
 export const getOrderById = async(req: Request, res:Response, next: NextFunction) => {
     try {
