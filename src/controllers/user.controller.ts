@@ -132,9 +132,26 @@ export const listUser = async(req: Request, res: Response, next: NextFunction) =
     });
 }
 
-export const getUserById = async(req: Request, res:Response , next: NextFunction ) => {
-   
-}
+export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = Number(req.params.id);
+
+  if (isNaN(userId) || userId <= 0) {
+    return next(new BadRequestException("Invalid User ID", ErrorCode.UNPROCESSABLE_ENTITY));
+  }
+
+  const user = await prismaClient.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    return next(new NotFoundException("User not found", ErrorCode.USER_NOT_FOUND));
+  }
+
+  return res.status(200).json({
+    message: "User fetched successfully",
+    data: user,
+  });
+};
 
 export const changeUserRole = async(req : Request, res: Response, next: NextFunction) => {
   
